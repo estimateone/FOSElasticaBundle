@@ -116,15 +116,17 @@ abstract class AbstractElasticaToModelTransformer extends BaseTransformer
         $idPos = array_flip($ids);
         usort(
             $objects,
-            function ($a, $b) use ($idPos, $identifier, $propertyAccessor) {
+            function ($a, $b) use ($idPos, $identifier, $propertyAccessor): int {
                 if ($this->options['hydrate']) {
-                    return $idPos[(string) $propertyAccessor->getValue(
+                    $aIsGreaterThanB = $idPos[(string) $propertyAccessor->getValue(
                         $a,
                         $identifier
                     )] > $idPos[(string) $propertyAccessor->getValue($b, $identifier)];
+                } else {
+                    $aIsGreaterThanB = $idPos[$a[$identifier]] > $idPos[$b[$identifier]];
                 }
-
-                return $idPos[$a[$identifier]] > $idPos[$b[$identifier]];
+                // Fix PHP8 deprecation warning re: returning bool from usort callback
+                return $aIsGreaterThanB ? 1 : -1;
             }
         );
 
